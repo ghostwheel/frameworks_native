@@ -633,8 +633,9 @@ EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config,
                 dp->disp.dpy, config, share_list, attrib_list);
         if (context != EGL_NO_CONTEXT) {
             // figure out if it's a GLESv1 or GLESv2
-            int version = 0;
-            if (attrib_list) {
+            int version = egl_connection_t::GLESv1_INDEX;
+
+            if (cnx->egl.eglQueryAPI() == EGL_OPENGL_ES_API && attrib_list) {
                 while (*attrib_list != EGL_NONE) {
                     GLint attr = *attrib_list++;
                     GLint value = *attrib_list++;

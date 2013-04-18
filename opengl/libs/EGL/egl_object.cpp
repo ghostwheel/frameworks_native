@@ -107,6 +107,16 @@ void egl_context_t::onMakeCurrent(EGLSurface draw, EGLSurface read) {
     if (gl_extensions.isEmpty()) {
         // call the implementation's glGetString(GL_EXTENSIONS)
         const char* exts = (const char *)gEGLImpl.hooks[version]->gl.glGetString(GL_EXTENSIONS);
+
+        if (!exts) { // glGetString can return NULL on error
+            // NOTE: this branch is only taken on first MakeCurrent call.
+            // There can not be previous GL errors that would get overwritten here,
+            // the error we're seeing should always come from the incorrect glGetString(GL_EXTENSIONS)
+            // call above.
+            (void) gEGLImpl.hooks[version]->gl.glGetError(); // read and ignore the GL error
+            exts = "";
+        }
+
         gl_extensions.setTo(exts);
         if (gl_extensions.find("GL_EXT_debug_marker") < 0) {
             String8 temp("GL_EXT_debug_marker ");
