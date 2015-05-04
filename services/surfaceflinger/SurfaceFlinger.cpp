@@ -2382,21 +2382,11 @@ void SurfaceFlinger::drawWormhole(const sp<const DisplayDevice>& hw, const Regio
     engine.fillRegionWithColor(region, height, 0, 0, 0, 0);
 }
 
-status_t SurfaceFlinger::addClientLayer(const sp<Client>& client,
+void SurfaceFlinger::addClientLayer(const sp<Client>& client,
         const sp<IBinder>& handle,
         const sp<IGraphicBufferProducer>& gbc,
         const sp<Layer>& lbc)
 {
-    // add this layer to the current state list
-    {
-        Mutex::Autolock _l(mStateLock);
-        if (mCurrentState.layersSortedByZ.size() >= MAX_LAYERS) {
-            return NO_MEMORY;
-        }
-        mCurrentState.layersSortedByZ.add(lbc);
-        mGraphicBufferProducerList.add(IInterface::asBinder(gbc));
-    }
-
     // attach this layer to the client
     client->attachLayer(handle, lbc);
 
@@ -2404,7 +2394,6 @@ status_t SurfaceFlinger::addClientLayer(const sp<Client>& client,
     Mutex::Autolock _l(mStateLock);
     mCurrentState.layersSortedByZ.add(lbc);
     mGraphicBufferProducerList.add(gbc->asBinder());
-    return NO_ERROR;
 }
 
 status_t SurfaceFlinger::removeLayer(const sp<Layer>& layer) {
@@ -2724,16 +2713,10 @@ status_t SurfaceFlinger::createLayer(
             break;
     }
 
-    if (result != NO_ERROR) {
-        return result;
+    if (result == NO_ERROR) {
+        addClientLayer(client, *handle, *gbp, layer);
+        setTransactionFlags(eTransactionNeeded);
     }
-
-    result = addClientLayer(client, *handle, *gbp, layer);
-    if (result != NO_ERROR) {
-        return result;
-    }
-
-    setTransactionFlags(eTransactionNeeded);
     return result;
 }
 
