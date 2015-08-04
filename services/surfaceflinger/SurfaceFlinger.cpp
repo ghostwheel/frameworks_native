@@ -2146,9 +2146,9 @@ void SurfaceFlinger::doDisplayComposition(const sp<const DisplayDevice>& hw,
         if (mDaltonize) {
             colorMatrix = colorMatrix * mDaltonizer();
         }
-        engine.beginGroup(colorMatrix);
+        mat4 oldMatrix = engine.setupColorTransform(colorMatrix);
         doComposeSurfaces(hw, dirtyRegion);
-        engine.endGroup();
+        engine.setupColorTransform(oldMatrix);
     }
 
     // update the swap region and clear the dirty region
@@ -2958,18 +2958,15 @@ status_t SurfaceFlinger::dump(int fd, const Vector<String16>& args)
         result.appendFormat("Permission Denial: "
                 "can't dump SurfaceFlinger from pid=%d, uid=%d\n", pid, uid);
     } else {
-        // Try to get the main lock, but don't insist if we can't
+        // Try to get the main lock, but give up after one second
         // (this would indicate SF is stuck, but we want to be able to
         // print something in dumpsys).
-        int retry = 3;
-        while (mStateLock.tryLock()<0 && --retry>=0) {
-            usleep(1000000);
-        }
-        const bool locked(retry >= 0);
+        status_t err = mStateLock.timedLock(s2ns(1));
+        bool locked = (err == NO_ERROR);
         if (!locked) {
-            result.append(
-                    "SurfaceFlinger appears to be unresponsive, "
-                    "dumping anyways (no locks held)\n");
+            result.appendFormat(
+                    "SurfaceFlinger appears to be unresponsive (%s [%d]), "
+                    "dumping anyways (no locks held)\n", strerror(-err), err);
         }
 
         bool dumpAll = true;
