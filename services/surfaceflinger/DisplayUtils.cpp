@@ -47,9 +47,7 @@
 #include <gralloc_priv.h>
 #endif
 #include <dlfcn.h>
-#if QTI_BSP
-#include <gralloc_priv.h>
-#endif
+#include <cutils/properties.h>
 
 namespace android {
 
