@@ -1492,6 +1492,10 @@ protected:
     // The time the primary pointer last went down.
     nsecs_t mDownTime;
 
+    // Time when the stylus touched last
+    static nsecs_t mLastStylusTime ; // michael
+
+
     // The pointer controller, or null if the device is not a pointer.
     sp<PointerControllerInterface> mPointerController;
 
@@ -1731,6 +1735,7 @@ private:
         // Time when the pointer went up for a TAP.
         nsecs_t tapUpTime;
 
+        
         // Location of initial tap.
         float tapX, tapY;
 
@@ -1817,6 +1822,7 @@ private:
 
     void sync(nsecs_t when);
 
+    bool rejectPalm(nsecs_t when) ; //michael
     bool consumeRawTouches(nsecs_t when, uint32_t policyFlags);
     void processRawTouches(bool timeout);
     void cookAndDispatch(nsecs_t when);
